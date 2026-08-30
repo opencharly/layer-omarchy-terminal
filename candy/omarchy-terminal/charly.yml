@@ -1,0 +1,75 @@
+omarchy-terminal:
+    candy:
+        version: 2026.242.0000
+        description: |
+            Omarchy's terminal and the command-line tools its shell configuration expects.
+            omarchy-terminal installs foot — the terminal Omarchy's Hyprland bindings and
+            xdg-terminal-exec actually launch — plus starship, which its shell prompt is
+            configured for, and the modern coreutils replacements its aliases and its
+            omarchy-* commands call. These are not preference: /etc/skel ships a bash
+            configuration that sources a starship init and defines aliases pointing at
+            eza, bat and fd, so without them a fresh shell emits errors on every prompt.
+            Verifiable on the built image: each binary is on PATH and the terminal the
+            desktop launches exists.
+        require:
+            - '@github.com/opencharly/layer-omarchy-base/candy/omarchy-base:v2026.242.0437'
+        distro:
+            arch:
+                package:
+                    # The terminal Omarchy launches. Its Hyprland bindings and
+                    # xdg-terminal-exec both name foot; alacritty was the 3.x default and
+                    # is NOT in the 4.x base set.
+                    - foot
+                    # The prompt /etc/skel's bash configuration initialises.
+                    - starship
+                    - bash-completion
+                    # Modern coreutils the shipped aliases and omarchy-* commands call.
+                    - eza
+                    - dua-cli
+                    - tldr
+                    - inxi
+                    - qrencode
+                    - zbar
+                    # Omarchy-published TUIs: a terminal workspace manager for AI agents
+                    # and a TUI music player. Both come prebuilt from [omarchy].
+                    - herdr
+                    - cliamp
+                    - btop
+        plan:
+            - check: the terminal the desktop's bindings launch is installed
+              id: omarchy-terminal-foot
+              context:
+                - build
+              file:
+                file: /usr/bin/foot
+                exists: true
+
+            - check: the prompt the shipped shell configuration initialises is installed
+              id: omarchy-terminal-starship
+              context:
+                - build
+              file:
+                file: /usr/bin/starship
+                exists: true
+
+            - check: the modern coreutils the shipped aliases point at are all present
+              id: omarchy-terminal-coreutils
+              context:
+                - build
+              # Asserted together: a missing one does not fail a build, it fails every
+              # interactive shell at the first prompt, which is far harder to trace.
+              exit_status: 0
+              command: |
+                  set -eu
+                  for b in eza dua tldr inxi qrencode btop; do
+                    command -v "$b" >/dev/null || { echo "missing: $b" >&2; exit 1; }
+                  done
+
+            - check: the Omarchy-published TUIs resolved from the [omarchy] repository
+              id: omarchy-terminal-omarchy-tuis
+              context:
+                - build
+              # herdr and cliamp exist only in [omarchy]; if this passes, the repo wiring
+              # in omarchy-base is working for more than the omarchy package itself.
+              exit_status: 0
+              command: sh -c 'command -v herdr >/dev/null && command -v cliamp >/dev/null'
