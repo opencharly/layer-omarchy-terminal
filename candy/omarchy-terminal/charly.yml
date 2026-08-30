@@ -1,0 +1,104 @@
+omarchy-terminal:
+    candy:
+        version: 2026.242.0000
+        description: |
+            Omarchy's terminal and the command-line tools its shipped shell configuration
+            and desktop entries actually consume. omarchy-terminal installs foot — the
+            terminal Omarchy's Hyprland bindings and xdg-terminal-exec launch — plus
+            starship, whose init the shipped rc sources, and the modern coreutils that rc
+            names. Read off the built image rather than assumed: eza, fzf, bat and zoxide
+            are referenced by /usr/share/omarchy/default/bash/{aliases,init,envs}, and dua
+            by the "Disk Usage" desktop entry. Three of those four rc references are
+            guarded by `command -v`, so a missing binary degrades silently — the alias or
+            key-binding simply never gets defined. bat is the exception: envs exports
+            MANPAGER="sh -c 'col -bx | bat -l man -p'" UNGUARDED, so without bat every
+            `man` invocation breaks. fd, ripgrep, tldr, inxi, qrencode and zbar are in
+            Omarchy's own base package list but are named by neither the rc nor any
+            omarchy-* command; they are installed for parity with upstream, and this
+            description does not claim the shell needs them. Verifiable on the built
+            image: every binary is on PATH and MANPAGER's interpreter resolves.
+        require:
+            - '@github.com/opencharly/layer-omarchy-base/candy/omarchy-base:v2026.242.0437'
+        distro:
+            arch:
+                package:
+                    # The terminal Omarchy launches. Its Hyprland bindings and
+                    # xdg-terminal-exec both name foot; alacritty was the 3.x default and
+                    # is NOT in the 4.x base set.
+                    - foot
+                    # The prompt /etc/skel's bash configuration initialises.
+                    - starship
+                    - bash-completion
+                    # Named by the shipped rc. bat is load-bearing (unguarded MANPAGER);
+                    # eza, fzf and zoxide are command-v-guarded conveniences.
+                    - bat
+                    - eza
+                    - fzf
+                    - zoxide
+                    # Called by the shipped "Disk Usage" desktop entry, via
+                    # xdg-terminal-exec -e bash -c "dua i /".
+                    - dua-cli
+                    # In Omarchy's base package list; not referenced by the rc or by any
+                    # omarchy-* command. Installed for parity with upstream, nothing more.
+                    - fd
+                    - ripgrep
+                    - tldr
+                    - inxi
+                    - qrencode
+                    - zbar
+                    # Omarchy-published TUIs: a terminal workspace manager for AI agents
+                    # and a TUI music player. Both come prebuilt from [omarchy].
+                    - herdr
+                    - cliamp
+                    - btop
+        plan:
+            - check: the terminal the desktop's bindings launch is installed
+              id: omarchy-terminal-foot
+              context:
+                - build
+              file:
+                file: /usr/bin/foot
+                exists: true
+
+            - check: the prompt the shipped shell configuration initialises is installed
+              id: omarchy-terminal-starship
+              context:
+                - build
+              file:
+                file: /usr/bin/starship
+                exists: true
+
+            - check: every command-line tool this candy declares is on PATH
+              id: omarchy-terminal-coreutils
+              context:
+                - build
+              # Asserted together: a missing one does not fail a build. For the guarded
+              # rc references it fails silently — the alias never gets defined and no
+              # error is ever printed — which is far harder to trace than a build error.
+              exit_status: 0
+              command: |
+                  set -eu
+                  for b in bat eza fzf zoxide dua fd rg tldr inxi qrencode zbarimg btop; do
+                    command -v "$b" >/dev/null || { echo "missing: $b" >&2; exit 1; }
+                  done
+
+            - check: the unguarded MANPAGER the shipped rc exports actually runs
+              id: omarchy-terminal-manpager
+              context:
+                - build
+              # envs exports MANPAGER="sh -c 'col -bx | bat -l man -p'" with NO
+              # command -v guard, so this is the one rc reference whose absence is a hard
+              # break rather than a silent degradation. Executes the real pipeline.
+              exit_status: 0
+              command: |
+                  set -eu
+                  printf 'NAME\n    charly - test\n' | sh -c "col -bx | bat -l man -p" >/dev/null
+
+            - check: the Omarchy-published TUIs resolved from the [omarchy] repository
+              id: omarchy-terminal-omarchy-tuis
+              context:
+                - build
+              # herdr and cliamp exist only in [omarchy]; if this passes, the repo wiring
+              # in omarchy-base is working for more than the omarchy package itself.
+              exit_status: 0
+              command: sh -c 'command -v herdr >/dev/null && command -v cliamp >/dev/null'
