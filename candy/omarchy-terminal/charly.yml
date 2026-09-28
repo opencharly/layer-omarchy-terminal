@@ -1,6 +1,5 @@
 omarchy-terminal:
     candy:
-        version: 2026.242.0000
         description: |
             Omarchy's terminal and the command-line tools its shipped shell configuration
             and desktop entries actually consume. omarchy-terminal installs foot — the
