@@ -1,6 +1,5 @@
 omarchy-terminal:
     candy:
-        version: 2026.242.0000
         description: |
             Omarchy's terminal and the command-line tools its shipped shell configuration
             and desktop entries actually consume. omarchy-terminal installs foot — the
@@ -18,7 +17,7 @@ omarchy-terminal:
             description does not claim the shell needs them. Verifiable on the built
             image: every binary is on PATH and MANPAGER's interpreter resolves.
         require:
-            - '@github.com/opencharly/layer-omarchy-base/candy/omarchy-base:v2026.242.0437'
+            - '@github.com/opencharly/layer-omarchy-base/candy/omarchy-base:v2026.242.0701'
         distro:
             arch:
                 package:
@@ -59,7 +58,6 @@ omarchy-terminal:
               file:
                 file: /usr/bin/foot
                 exists: true
-
             - check: the prompt the shipped shell configuration initialises is installed
               id: omarchy-terminal-starship
               context:
@@ -67,7 +65,6 @@ omarchy-terminal:
               file:
                 file: /usr/bin/starship
                 exists: true
-
             - check: every command-line tool this candy declares is on PATH
               id: omarchy-terminal-coreutils
               context:
@@ -77,11 +74,10 @@ omarchy-terminal:
               # error is ever printed — which is far harder to trace than a build error.
               exit_status: 0
               command: |
-                  set -eu
-                  for b in bat eza fzf zoxide dua fd rg tldr inxi qrencode zbarimg btop; do
-                    command -v "$b" >/dev/null || { echo "missing: $b" >&2; exit 1; }
-                  done
-
+                set -eu
+                for b in bat eza fzf zoxide dua fd rg tldr inxi qrencode zbarimg btop; do
+                  command -v "$b" >/dev/null || { echo "missing: $b" >&2; exit 1; }
+                done
             - check: the unguarded MANPAGER the shipped rc exports actually runs
               id: omarchy-terminal-manpager
               context:
@@ -91,9 +87,8 @@ omarchy-terminal:
               # break rather than a silent degradation. Executes the real pipeline.
               exit_status: 0
               command: |
-                  set -eu
-                  printf 'NAME\n    charly - test\n' | sh -c "col -bx | bat -l man -p" >/dev/null
-
+                set -eu
+                printf 'NAME\n    charly - test\n' | sh -c "col -bx | bat -l man -p" >/dev/null
             - check: the Omarchy-published TUIs resolved from the [omarchy] repository
               id: omarchy-terminal-omarchy-tuis
               context:
