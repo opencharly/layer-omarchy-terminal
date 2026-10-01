@@ -17,7 +17,7 @@ omarchy-terminal:
             description does not claim the shell needs them. Verifiable on the built
             image: every binary is on PATH and MANPAGER's interpreter resolves.
         require:
-            - '@github.com/opencharly/layer-omarchy-base/candy/omarchy-base:v2026.242.0437'
+            - '@github.com/opencharly/layer-omarchy-base/candy/omarchy-base:v2026.272.0437'
         distro:
             arch:
                 package:
